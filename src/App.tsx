@@ -77,7 +77,7 @@ const App = () => {
         a.id === audit.id
           ? {
               ...a,
-              status: percentageComplete === 100 ? 'Submitted' : 'In Progress',
+              status: (percentageComplete === 100 ? 'Submitted' : 'In Progress') as AuditStatus,
               score,
               percentageComplete,
               lastUpdatedDate: new Date().toISOString()
@@ -113,7 +113,7 @@ const App = () => {
     upsertState((prev) => {
       const audits = prev.audits.map((a) =>
         a.id === auditId
-          ? { ...a, status: 'Rebutted', rebuttalComment: comment, lastUpdatedDate: new Date().toISOString() }
+          ? { ...a, status: 'Rebutted' as AuditStatus, rebuttalComment: comment, lastUpdatedDate: new Date().toISOString() }
           : a
       );
       return addNotification({ ...prev, audits }, 'Rebuttal raised', `Audit ${auditId} moved to Rebutted.`);
@@ -127,7 +127,7 @@ const App = () => {
         a.id === auditId
           ? {
               ...a,
-              status: 'Under Review',
+              status: 'Under Review' as AuditStatus,
               rebuttalAssignedTo: reviewerId,
               lastUpdatedDate: new Date().toISOString()
             }
@@ -158,14 +158,39 @@ const App = () => {
     });
   };
 
+  const completedCount = state.audits.filter((a) => a.status === 'Completed' || a.status === 'Closed').length;
+  const submittedCount = state.audits.filter((a) => a.status === 'Submitted').length;
+  const rebuttalCount = state.audits.filter((a) => a.status === 'Rebutted' || a.status === 'Under Review').length;
+
   return (
     <div className="layout">
-      <header>
-        <h1>Audit Management Application (POC)</h1>
-        <p>Phase 1 localStorage implementation with role-based UI and stubbed enterprise integrations.</p>
+      <header className="hero">
+        <div>
+          <p className="eyebrow">Audit Operations Hub</p>
+          <h1>Audit Management Application</h1>
+          <p>Track execution, rebuttals, and secondary audits from a single workspace.</p>
+        </div>
+        <div className="metric-row">
+          <article className="metric-card">
+            <span>Total Audits</span>
+            <strong>{state.audits.length}</strong>
+          </article>
+          <article className="metric-card">
+            <span>Submitted</span>
+            <strong>{submittedCount}</strong>
+          </article>
+          <article className="metric-card">
+            <span>Rebuttals</span>
+            <strong>{rebuttalCount}</strong>
+          </article>
+          <article className="metric-card">
+            <span>Completed/Closed</span>
+            <strong>{completedCount}</strong>
+          </article>
+        </div>
       </header>
 
-      <section className="card row">
+      <section className="card row controls">
         <label>
           Active Test User
           <select value={activeUserId} onChange={(e) => setActiveUserId(e.target.value)}>
@@ -220,7 +245,7 @@ const App = () => {
           </ul>
         </section>
 
-        <section className="card">
+        <section className="card workspace">
           <h2>Audit Workspace</h2>
           {!selectedAudit || !selectedType ? (
             <p>No audit selected.</p>
